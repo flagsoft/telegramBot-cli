@@ -27,7 +27,7 @@ func init() {
 	receiveTextCmd.Flags().StringP("token", "t", "", "Token from bot fathers")
 	receiveTextCmd.Flags().IntP("chatId", "c", 0, "Your chatId, leave blank or set 0 if you want to listen all chats")
 	receiveTextCmd.Flags().IntP("messageCounter", "n", 0, "Numer of messages, leave blank or set 0 for continuous receiving")
-	receiveTextCmd.Flags().BoolP("wantSkip", "s", true, "Skip message sended while the bot was not running")
+	receiveTextCmd.Flags().BoolP("wantSync", "s", false, "Sync old messages sended while the bot was not running")
 	receiveTextCmd.Flags().BoolP("wantChatId", "C", false, "Print the chat ID")
 	receiveTextCmd.Flags().BoolP("wantTimestamp", "U", false, "Print the UNIX datetime")
 	receiveTextCmd.Flags().BoolP("wantTimestampHuman", "H", false, "Print the datetime human readable")
@@ -39,7 +39,7 @@ func receiveMessage(cmd *cobra.Command, args []string) error {
 	chatId, _ := cmd.Flags().GetInt("chatId")
 	maxMessages, _ := cmd.Flags().GetInt("messageCounter")
 	wantChatId, _ := cmd.Flags().GetBool("wantChatId")
-	skip, _ := cmd.Flags().GetBool("wantSkip")
+	sync, _ := cmd.Flags().GetBool("wantSync")
 	wantTimestamp, _ := cmd.Flags().GetBool("wantTimestamp")
 	wantTimestampHuman, _ := cmd.Flags().GetBool("wantTimestampHuman")
 	wantMessageId, _ := cmd.Flags().GetBool("wantMessageId")
@@ -52,6 +52,11 @@ func receiveMessage(cmd *cobra.Command, args []string) error {
 	defaultHandler := func(ctx context.Context, tgBot *bot.Bot, update *models.Update, cancelFunc context.CancelFunc) {
 		//Handle only messages
 		if update.Message != nil {
+
+			if int64(update.Message.Date) < time.Now().Unix() && !sync {
+				return
+			}
+
 			//Listen only for the specified chat ID
 			if update.Message.Chat.ID == int64(chatId) || chatId == 0 {
 
@@ -80,11 +85,14 @@ func receiveMessage(cmd *cobra.Command, args []string) error {
 				//Print out complete message
 				fmt.Println(outputMessage)
 
-				//Increase the counter
-				counter++
+				//Increase the counter only if user want a cuntdown
+				if maxMessages != 0 {
+					counter++
+
+				}
 
 				//Check if counter has reach the user value
-				if counter >= maxMessages {
+				if counter > maxMessages {
 					//Close the bot
 					tgBot.Close(ctx)
 
@@ -102,11 +110,6 @@ func receiveMessage(cmd *cobra.Command, args []string) error {
 			//Pass the param from the default handler + the context cancellation function
 			defaultHandler(ctx, b, update, cancel)
 		}),
-	}
-
-	//Ignore updates sended before the app started
-	if skip {
-		opts = append(opts, bot.WithAllowedUpdates(bot.AllowedUpdates{}))
 	}
 
 	//Create the bot
