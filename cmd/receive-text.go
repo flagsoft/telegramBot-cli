@@ -64,19 +64,19 @@ func receiveMessage(cmd *cobra.Command, args []string) error {
 
 				//Append the Date and Time
 				if wantTimestampHuman {
-					outputMessage += fmt.Sprintf("%s | ", time.Unix(int64(update.Message.Date), 0))
+					outputMessage += fmt.Sprintf("DATE:%s|", time.Unix(int64(update.Message.Date), 0))
 				} else if wantTimestamp {
-					outputMessage += fmt.Sprintf("%d | ", update.Message.Date)
+					outputMessage += fmt.Sprintf("DATE:%d|", update.Message.Date)
 				}
 
 				//Append Chat ID
 				if wantChatId {
-					outputMessage += fmt.Sprintf("%d | ", update.Message.Chat.ID)
+					outputMessage += fmt.Sprintf("CHAT_ID:%d|", update.Message.Chat.ID)
 				}
 
 				//Append Message ID
 				if wantMessageId {
-					outputMessage += fmt.Sprintf("%d | ", update.Message.ID)
+					outputMessage += fmt.Sprintf("MESSAGE_ID:%d|", update.Message.ID)
 				}
 
 				//Append message
