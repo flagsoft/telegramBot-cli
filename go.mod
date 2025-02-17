@@ -1,6 +1,8 @@
 module telegram-cli
 
-go 1.23.2
+go 1.24
+
+toolchain go1.24.0
 
 require (
 	github.com/go-telegram/bot v1.13.3 // indirect
