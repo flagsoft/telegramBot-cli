@@ -29,9 +29,9 @@ func init() {
 	receiveTextCmd.Flags().IntP("messageCounter", "n", 0, "Numer of messages, leave blank or set 0 for continuous receiving")
 	receiveTextCmd.Flags().BoolP("wantSync", "s", false, "Sync old messages sended while the bot was not running")
 	receiveTextCmd.Flags().BoolP("wantChatId", "C", false, "Print the chat ID")
+	receiveTextCmd.Flags().BoolP("wantMessageId", "M", false, "Print the message ID of each message")
 	receiveTextCmd.Flags().BoolP("wantTimestamp", "U", false, "Print the UNIX datetime")
 	receiveTextCmd.Flags().BoolP("wantTimestampHuman", "H", false, "Print the datetime human readable")
-	receiveTextCmd.Flags().BoolP("wantMessageId", "M", false, "Print the message ID of each message")
 }
 
 func receiveMessage(cmd *cobra.Command, args []string) error {
@@ -51,7 +51,7 @@ func receiveMessage(cmd *cobra.Command, args []string) error {
 	//Create the handler
 	defaultHandler := func(ctx context.Context, tgBot *bot.Bot, update *models.Update, cancelFunc context.CancelFunc) {
 		//Handle only messages
-		if update.Message != nil {
+		if update.Message != nil && update.Message.Text != "" {
 
 			if int64(update.Message.Date) < time.Now().Unix() && !sync {
 				return
