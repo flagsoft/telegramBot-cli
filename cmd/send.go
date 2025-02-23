@@ -16,7 +16,7 @@ var sendCmd = &cobra.Command{
 	Use:   "send",
 	Short: "Send message with text or image",
 	Long:  "Send a message in a chat id as bot with text or an image",
-	Args:  validateArgsText,
+	Args:  validateArgsSend,
 	//Link the validation function to the sendTextCmd
 	RunE: sendMessage,
 	//Link the function with the capabilities of returning an error
@@ -26,7 +26,7 @@ func init() {
 	rootCmd.AddCommand(sendCmd)
 
 	sendCmd.Flags().StringP("token", "t", "", "Token from bot fathers")
-	sendCmd.Flags().IntP("chatId", "c", 0, "Your chatId")
+	sendCmd.Flags().IntP("chatId", "c", 0, "Your chat ID")
 	sendCmd.Flags().StringP("messageText", "m", "", "Message text to send")
 	sendCmd.Flags().StringP("imagePath", "i", "", "Path of the image to send")
 	sendCmd.Flags().IntP("replyChatId", "x", 0, "Chat id you want to reply")
@@ -117,7 +117,7 @@ func sendMessage(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func validateArgsText(cmd *cobra.Command, args []string) error {
+func validateArgsSend(cmd *cobra.Command, args []string) error {
 	//Validate the token
 	token, _ := cmd.Flags().GetString("token")
 	if token == "" {
@@ -133,7 +133,7 @@ func validateArgsText(cmd *cobra.Command, args []string) error {
 	//Validate the message
 	var hasMessage bool
 
-	message, _ := cmd.Flags().GetString("message")
+	message, _ := cmd.Flags().GetString("messageText")
 	if message == "" {
 		hasMessage = false
 	} else {

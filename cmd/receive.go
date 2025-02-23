@@ -16,7 +16,7 @@ var receiveTextCmd = &cobra.Command{
 	Short: "Receive message with text",
 	Long:  "Receive a message in a chat id as bot with the pattern below\nDATA | CHAT_ID | MESSAGE_ID | MESSAGE",
 	//Link the validation function to the receiveTextCmd
-	Args: validateArgsReceiveText,
+	Args: validateArgsReceive,
 	//Link the function with the capabilities of returning an error
 	RunE: receiveMessage,
 }
@@ -25,7 +25,7 @@ func init() {
 	rootCmd.AddCommand(receiveTextCmd)
 
 	receiveTextCmd.Flags().StringP("token", "t", "", "Token from bot fathers")
-	receiveTextCmd.Flags().IntP("chatId", "c", 0, "Your chatId, leave blank or set 0 if you want to listen all chats")
+	receiveTextCmd.Flags().IntP("chatId", "c", 0, "ID of the chat, leave blank or set 0 if you want to listen all chats")
 	receiveTextCmd.Flags().IntP("messageCounter", "n", 0, "Numer of messages to receive, leave blank or set 0 for continuous receiving")
 	receiveTextCmd.Flags().BoolP("sync", "s", false, "Sync old messages sended while the bot was not running")
 	receiveTextCmd.Flags().BoolP("printChatId", "C", false, "Print the chat ID")
@@ -127,7 +127,7 @@ func receiveMessage(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func validateArgsReceiveText(cmd *cobra.Command, args []string) error {
+func validateArgsReceive(cmd *cobra.Command, args []string) error {
 	//Validate the token
 	token, _ := cmd.Flags().GetString("token")
 	if token == "" {
@@ -140,7 +140,7 @@ func validateArgsReceiveText(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("wrong chat ID provided")
 	}
 
-	//No need to validate the messageCounter
+	//No need to validate the messageCounter, sync, printChatId, printMessageId, printTimestampUnix, printTimestampHuman
 
 	return nil
 }
