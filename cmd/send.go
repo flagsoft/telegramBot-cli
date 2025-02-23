@@ -27,21 +27,21 @@ func init() {
 
 	sendCmd.Flags().StringP("token", "t", "", "Token from bot fathers")
 	sendCmd.Flags().IntP("chatId", "c", 0, "Your chatId")
-	sendCmd.Flags().StringP("message", "m", "", "Message text to send")
+	sendCmd.Flags().StringP("messageText", "m", "", "Message text to send")
 	sendCmd.Flags().StringP("imagePath", "i", "", "Path of the image to send")
-	sendCmd.Flags().BoolP("printMessageId", "I", false, "Print message id of your message")
-	sendCmd.Flags().IntP("replyChatId", "C", 0, "Chat id you want to reply")
-	sendCmd.Flags().IntP("replyMessageId", "M", 0, "Message id you want to reply")
+	sendCmd.Flags().IntP("replyChatId", "x", 0, "Chat id you want to reply")
+	sendCmd.Flags().IntP("replyMessageId", "y", 0, "Message id you want to reply")
+	sendCmd.Flags().BoolP("printMessageId", "M", false, "Print message id of your message")
 }
 
 func sendMessage(cmd *cobra.Command, args []string) error {
 	token, _ := cmd.Flags().GetString("token")
 	chatId, _ := cmd.Flags().GetInt("chatId")
-	message, _ := cmd.Flags().GetString("message")
+	messageText, _ := cmd.Flags().GetString("messageText")
 	imagePath, _ := cmd.Flags().GetString("imagePath")
-	printMessageId, _ := cmd.Flags().GetBool("printMessageId")
 	replyChatId, _ := cmd.Flags().GetInt("replyChatId")
 	replyMessageId, _ := cmd.Flags().GetInt("replyMessageId")
+	printMessageId, _ := cmd.Flags().GetBool("printMessageId")
 
 	//Create a context
 	bgCtx := context.Background()
@@ -78,17 +78,22 @@ func sendMessage(cmd *cobra.Command, args []string) error {
 		parameters := &bot.SendPhotoParams{
 			ChatID:          chatId,
 			Photo:           &models.InputFileUpload{Filename: imagePath, Data: image},
-			Caption:         message,
+			Caption:         messageText,
 			ReplyParameters: replyParameters,
 		}
 
 		//Send image
 		rtrn, err = tgBot.SendPhoto(bgCtx, parameters)
 
+		//Check for errors
+		if err != nil {
+			return err
+		}
+
 	} else { //Send a message
 		parameters := &bot.SendMessageParams{
 			ChatID:          chatId,
-			Text:            message,
+			Text:            messageText,
 			ReplyParameters: replyParameters,
 		}
 

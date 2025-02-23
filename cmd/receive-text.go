@@ -26,24 +26,24 @@ func init() {
 
 	receiveTextCmd.Flags().StringP("token", "t", "", "Token from bot fathers")
 	receiveTextCmd.Flags().IntP("chatId", "c", 0, "Your chatId, leave blank or set 0 if you want to listen all chats")
-	receiveTextCmd.Flags().IntP("messageCounter", "n", 0, "Numer of messages, leave blank or set 0 for continuous receiving")
-	receiveTextCmd.Flags().BoolP("wantSync", "s", false, "Sync old messages sended while the bot was not running")
-	receiveTextCmd.Flags().BoolP("wantChatId", "C", false, "Print the chat ID")
-	receiveTextCmd.Flags().BoolP("wantMessageId", "M", false, "Print the message ID of each message")
-	receiveTextCmd.Flags().BoolP("wantTimestamp", "U", false, "Print the UNIX datetime")
-	receiveTextCmd.Flags().BoolP("wantTimestampHuman", "H", false, "Print the datetime human readable")
+	receiveTextCmd.Flags().IntP("messageCounter", "n", 0, "Numer of messages to receive, leave blank or set 0 for continuous receiving")
+	receiveTextCmd.Flags().BoolP("sync", "s", false, "Sync old messages sended while the bot was not running")
+	receiveTextCmd.Flags().BoolP("printChatId", "C", false, "Print the chat ID")
+	receiveTextCmd.Flags().BoolP("printMessageId", "M", false, "Print the message ID of each message")
+	receiveTextCmd.Flags().BoolP("printTimestampUnix", "U", false, "Print the datetime UNIX")
+	receiveTextCmd.Flags().BoolP("printTimestampHuman", "H", false, "Print the datetime human readable")
 }
 
 func receiveMessage(cmd *cobra.Command, args []string) error {
 	token, _ := cmd.Flags().GetString("token")
 	chatId, _ := cmd.Flags().GetInt("chatId")
 	maxMessages, _ := cmd.Flags().GetInt("messageCounter")
-	wantChatId, _ := cmd.Flags().GetBool("wantChatId")
-	sync, _ := cmd.Flags().GetBool("wantSync")
-	wantTimestamp, _ := cmd.Flags().GetBool("wantTimestamp")
-	wantTimestampHuman, _ := cmd.Flags().GetBool("wantTimestampHuman")
-	wantMessageId, _ := cmd.Flags().GetBool("wantMessageId")
 	counter := 0
+	sync, _ := cmd.Flags().GetBool("sync")
+	wantChatId, _ := cmd.Flags().GetBool("printChatId")
+	wantMessageId, _ := cmd.Flags().GetBool("printMessageId")
+	wantTimestampUnix, _ := cmd.Flags().GetBool("printTimestampUnix")
+	wantTimestampHuman, _ := cmd.Flags().GetBool("printTimestampHuman")
 
 	//Create a context
 	bgCtx, cancel := context.WithCancel(context.Background())
@@ -65,7 +65,7 @@ func receiveMessage(cmd *cobra.Command, args []string) error {
 				//Append the Date and Time
 				if wantTimestampHuman {
 					outputMessage += fmt.Sprintf("DATE:%s|", time.Unix(int64(update.Message.Date), 0))
-				} else if wantTimestamp {
+				} else if wantTimestampUnix {
 					outputMessage += fmt.Sprintf("DATE:%d|", update.Message.Date)
 				}
 
