@@ -15,7 +15,7 @@ import (
 var sendCmd = &cobra.Command{
 	Use:   "send",
 	Short: "Send message with text or image",
-	Long:  "Send a message in a chat id as bot with text or an image",
+	Long:  "Send a message in a chat as bot with text or an image",
 	Args:  validateArgsSend,
 	//Link the validation function to the sendTextCmd
 	RunE: sendMessage,

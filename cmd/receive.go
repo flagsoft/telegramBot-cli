@@ -14,7 +14,7 @@ import (
 var receiveTextCmd = &cobra.Command{
 	Use:   "receive",
 	Short: "Receive message with text",
-	Long:  "Receive a message in a chat id as bot with the pattern below\nDATA | CHAT_ID | MESSAGE_ID | MESSAGE",
+	Long:  "Receive a message as bot with the pattern below\nDATA | CHAT_ID | MESSAGE_ID | MESSAGE",
 	//Link the validation function to the receiveTextCmd
 	Args: validateArgsReceive,
 	//Link the function with the capabilities of returning an error

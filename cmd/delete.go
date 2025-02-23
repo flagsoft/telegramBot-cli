@@ -12,7 +12,7 @@ import (
 var deleteTextCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete message",
-	Long:  "Delete a message in a chat id as bot with the pattern below\nDATA | CHAT_ID | MESSAGE_ID | MESSAGE",
+	Long:  "Delete a message",
 	//Link the validation function to the validateArgsDelete
 	Args: validateArgsDelete,
 	//Link the function with the capabilities of returning an error
