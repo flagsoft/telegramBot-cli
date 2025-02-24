@@ -14,7 +14,7 @@ import (
 var receiveTextCmd = &cobra.Command{
 	Use:   "receive",
 	Short: "Receive message with text",
-	Long:  "Receive a message as bot with the pattern below\nDATA | CHAT_ID | MESSAGE_ID | MESSAGE",
+	Long:  "Receive a message as bot with the pattern below\nDATA|CHAT_ID|MESSAGE_ID|URL|MESSAGE",
 	//Link the validation function to the receiveTextCmd
 	Args: validateArgsReceive,
 	//Link the function with the capabilities of returning an error
@@ -32,6 +32,9 @@ func init() {
 	receiveTextCmd.Flags().BoolP("printMessageId", "M", false, "Print the message ID of each message")
 	receiveTextCmd.Flags().BoolP("printTimestampUnix", "U", false, "Print the datetime UNIX")
 	receiveTextCmd.Flags().BoolP("printTimestampHuman", "H", false, "Print the datetime human readable")
+	receiveTextCmd.Flags().BoolP("printPhotoUrl", "P", false, "Print the photo url")
+	receiveTextCmd.Flags().BoolP("printFileUrl", "F", false, "Print the file url")
+	receiveTextCmd.Flags().BoolP("printAudioUrl", "A", false, "Print the audio url")
 }
 
 func receiveMessage(cmd *cobra.Command, args []string) error {
@@ -44,63 +47,95 @@ func receiveMessage(cmd *cobra.Command, args []string) error {
 	wantMessageId, _ := cmd.Flags().GetBool("printMessageId")
 	wantTimestampUnix, _ := cmd.Flags().GetBool("printTimestampUnix")
 	wantTimestampHuman, _ := cmd.Flags().GetBool("printTimestampHuman")
+	wantPhoto, _ := cmd.Flags().GetBool("printPhotoUrl")
+	wantFile, _ := cmd.Flags().GetBool("printFileUrl")
+	wantAudio, _ := cmd.Flags().GetBool("printAudioUrl")
 
 	//Create a context
 	bgCtx, cancel := context.WithCancel(context.Background())
 
 	//Create the handler
 	defaultHandler := func(ctx context.Context, tgBot *bot.Bot, update *models.Update, cancelFunc context.CancelFunc) {
-		//Handle only messages
-		if update.Message != nil && update.Message.Text != "" {
 
-			if int64(update.Message.Date) < time.Now().Unix() && !sync {
+		//No message exist
+		if update.Message == nil {
+			return
+		}
+
+		//If don't want to sync discard old message
+		if int64(update.Message.Date) < time.Now().Unix() && !sync {
+			return
+		}
+
+		//Listen only for the specified chat ID
+		if update.Message.Chat.ID != int64(chatId) && chatId != 0 {
+			return
+		}
+		//Create an empty message that will be filled by the functions
+		outputMessage := ""
+
+		//Append the Date and Time
+		if wantTimestampHuman {
+			outputMessage += fmt.Sprintf("DATE:%s|", time.Unix(int64(update.Message.Date), 0))
+		} else if wantTimestampUnix {
+			outputMessage += fmt.Sprintf("DATE:%d|", update.Message.Date)
+		}
+
+		//Append Chat ID
+		if wantChatId {
+			outputMessage += fmt.Sprintf("CHAT_ID:%d|", update.Message.Chat.ID)
+		}
+
+		//Append Message ID
+		if wantMessageId {
+			outputMessage += fmt.Sprintf("MESSAGE_ID:%d|", update.Message.ID)
+		}
+
+		if (update.Message.Photo != nil && wantPhoto) || (update.Message.Document != nil && wantFile) || (update.Message.Audio != nil && wantAudio) {
+
+			var fileID string
+
+			if wantPhoto {
+				//Get highest resolution photo
+				fileID = update.Message.Photo[len(update.Message.Photo)-1].FileID
+			} else if wantFile {
+				fileID = update.Message.Document.FileID
+			} else if wantAudio {
+				fileID = update.Message.Audio.FileID
+			} else {
 				return
 			}
 
-			//Listen only for the specified chat ID
-			if update.Message.Chat.ID == int64(chatId) || chatId == 0 {
-
-				outputMessage := ""
-
-				//Append the Date and Time
-				if wantTimestampHuman {
-					outputMessage += fmt.Sprintf("DATE:%s|", time.Unix(int64(update.Message.Date), 0))
-				} else if wantTimestampUnix {
-					outputMessage += fmt.Sprintf("DATE:%d|", update.Message.Date)
-				}
-
-				//Append Chat ID
-				if wantChatId {
-					outputMessage += fmt.Sprintf("CHAT_ID:%d|", update.Message.Chat.ID)
-				}
-
-				//Append Message ID
-				if wantMessageId {
-					outputMessage += fmt.Sprintf("MESSAGE_ID:%d|", update.Message.ID)
-				}
-
-				//Append message
-				outputMessage += update.Message.Text
-
-				//Print out complete message
-				fmt.Println(outputMessage)
-
-				//Increase the counter only if user want a cuntdown
-				if maxMessages != 0 {
-					counter++
-
-				}
-
-				//Check if counter has reach the user value
-				if counter > maxMessages {
-					//Close the bot
-					tgBot.Close(ctx)
-
-					//Cancel the Context
-					cancelFunc()
-				}
-
+			// Get file info from Telegram API
+			file, err := tgBot.GetFile(ctx, &bot.GetFileParams{FileID: fileID})
+			if err != nil {
+				fmt.Println("Error file not valid")
+				return
 			}
+
+			//Append image path
+			outputMessage += fmt.Sprintf("|https://api.telegram.org/file/bot%s/%s|%s", token, file.FilePath, update.Message.Caption)
+		} else if update.Message.Text != "" { //Handle text message
+			//Append message
+			outputMessage += update.Message.Text
+		}
+
+		//Print out complete message
+		fmt.Println(outputMessage)
+
+		//Increase the counter only if user want a cuntdown
+		if maxMessages != 0 {
+			counter++
+
+		}
+
+		//Check if counter has reach the user value
+		if counter > maxMessages {
+			//Close the bot
+			tgBot.Close(ctx)
+
+			//Cancel the Context
+			cancelFunc()
 		}
 	}
 

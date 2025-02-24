@@ -53,7 +53,7 @@ telegramBot-cli send {parameters}
 Parameters
 ```
 Receive a message as bot with the pattern below
-DATA | CHAT_ID | MESSAGE_ID | MESSAGE
+DATA|CHAT_ID|MESSAGE_ID|URL|MESSAGE
 
 Usage:
   telegram-cli receive [flags]
