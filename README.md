@@ -62,8 +62,11 @@ Flags:
   -c, --chatId int            ID of the chat, leave blank or set 0 if you want to listen all chats
   -h, --help                  help for receive
   -n, --messageCounter int    Numer of messages to receive, leave blank or set 0 for continuous receiving
+  -A, --printAudioUrl         Print the audio url
   -C, --printChatId           Print the chat ID
+  -F, --printFileUrl          Print the file url
   -M, --printMessageId        Print the message ID of each message
+  -P, --printPhotoUrl         Print the photo url
   -H, --printTimestampHuman   Print the datetime human readable
   -U, --printTimestampUnix    Print the datetime UNIX
   -s, --sync                  Sync old messages sended while the bot was not running
