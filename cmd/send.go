@@ -31,6 +31,7 @@ func init() {
 	sendCmd.Flags().StringP("imagePath", "i", "", "Path of the image to send")
 	sendCmd.Flags().IntP("replyChatId", "x", 0, "Chat id you want to reply")
 	sendCmd.Flags().IntP("replyMessageId", "y", 0, "Message id you want to reply")
+	sendCmd.Flags().BoolP("markDownV2", "2", false, "Message text is parsed in markdown v2")
 	sendCmd.Flags().BoolP("printMessageId", "M", false, "Print message id of your message")
 }
 
@@ -41,6 +42,7 @@ func sendMessage(cmd *cobra.Command, args []string) error {
 	imagePath, _ := cmd.Flags().GetString("imagePath")
 	replyChatId, _ := cmd.Flags().GetInt("replyChatId")
 	replyMessageId, _ := cmd.Flags().GetInt("replyMessageId")
+	markDownV2, _ := cmd.Flags().GetBool("markDownV2")
 	printMessageId, _ := cmd.Flags().GetBool("printMessageId")
 
 	//Create a context
@@ -52,15 +54,22 @@ func sendMessage(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	//Create the return message structure
 	var rtrn *models.Message
-	replyParameters := &models.ReplyParameters{}
+
+	//Create and fill parsing parameters
+	var parsing models.ParseMode
+	if markDownV2 {
+		parsing = models.ParseModeMarkdown
+	}
 
 	//If user does no has provided the chat ID use the current one
 	if replyChatId == 0 {
 		replyChatId = chatId
 	}
 
-	//Fill reply parameters
+	//Create and fill reply parameters
+	replyParameters := &models.ReplyParameters{}
 	if replyMessageId != 0 {
 		replyParameters.ChatID = replyChatId
 		replyParameters.MessageID = replyMessageId
@@ -80,6 +89,7 @@ func sendMessage(cmd *cobra.Command, args []string) error {
 			Photo:           &models.InputFileUpload{Filename: imagePath, Data: image},
 			Caption:         messageText,
 			ReplyParameters: replyParameters,
+			ParseMode:       parsing,
 		}
 
 		//Send image
@@ -95,6 +105,7 @@ func sendMessage(cmd *cobra.Command, args []string) error {
 			ChatID:          chatId,
 			Text:            messageText,
 			ReplyParameters: replyParameters,
+			ParseMode:       parsing,
 		}
 
 		//Send the message
