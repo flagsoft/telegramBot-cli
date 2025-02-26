@@ -68,7 +68,7 @@ func validateArgsDelete(cmd *cobra.Command, args []string) error {
 
 	//Validate the chat ID
 	chatId, _ := cmd.Flags().GetInt("chatId")
-	if len(strconv.Itoa(chatId)) != 9 {
+	if chatId != 0 && len(strconv.Itoa(chatId)) != 9 {
 		return fmt.Errorf("wrong chat ID provided")
 	}
 
