@@ -50,7 +50,7 @@ func editMessage(cmd *cobra.Command, args []string) error {
 		Text:      message,
 	}
 
-	//Delete message
+	//Edit message
 	_, err = tgBot.EditMessageText(bgCtx, parameters)
 	if err != nil {
 		return err
