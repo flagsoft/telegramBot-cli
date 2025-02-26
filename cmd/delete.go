@@ -24,7 +24,7 @@ func init() {
 
 	deleteTextCmd.Flags().StringP("token", "t", "", "Token from bot fathers")
 	deleteTextCmd.Flags().IntP("chatId", "c", 0, "ID of the chat, leave blank or set 0 if you want to listen all chats")
-	deleteTextCmd.Flags().IntP("messageId", "m", 0, "ID of the message tou wan't to delete")
+	deleteTextCmd.Flags().IntP("messageId", "i", 0, "ID of the message you wan't to delete")
 }
 
 func deleteMessage(cmd *cobra.Command, args []string) error {
@@ -68,11 +68,11 @@ func validateArgsDelete(cmd *cobra.Command, args []string) error {
 
 	//Validate the chat ID
 	chatId, _ := cmd.Flags().GetInt("chatId")
-	if chatId != 0 && len(strconv.Itoa(chatId)) != 9 {
+	if len(strconv.Itoa(chatId)) != 9 {
 		return fmt.Errorf("wrong chat ID provided")
 	}
 
-	//No need to validate the chat ID
+	//No need to validate the message ID
 
 	return nil
 }

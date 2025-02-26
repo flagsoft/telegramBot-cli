@@ -91,7 +91,7 @@ Usage:
 Flags:
   -c, --chatId int      ID of the chat, leave blank or set 0 if you want to listen all chats
   -h, --help            help for delete
-  -m, --messageId int   ID of the message tou wan't to delete
+  -i, --messageId int   ID of the message you wan't to delete
   -t, --token string    Token from bot fathers
 ```
 Launch
@@ -101,6 +101,29 @@ go run telegramBot-cli.go delete {parameters}
 or
 ```shell
 telegramBot-cli delete {parameters}
+```
+## Edit
+Parameters
+```
+Edit a text message
+
+Usage:
+  telegram-cli edit [flags]
+
+Flags:
+  -c, --chatId int           ID of the chat, leave blank or set 0 if you want to listen all chats
+  -h, --help                 help for edit
+  -i, --messageId int        ID of the message you wan't to edit
+  -m, --messageText string   Text of the new message
+  -t, --token string         Token from bot fathers
+```
+Launch
+```go
+go run telegramBot-cli.go edit {parameters}
+```
+or
+```shell
+telegramBot-cli edit {parameters}
 ```
 # License
 telegramBot-cli repo is under CC0 1.0.
