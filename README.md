@@ -16,6 +16,38 @@ Built With:
 * Written entirely in [GO][GO_url]
 * [Telegram library](https://github.com/go-telegram/bot) for interacting with the API.
 * [Cobra framework](https://github.com/spf13/cobra) to manage CLI inputs.
+### Roadmap
+- [x] Send
+    - [x] Message
+        - [x] With markdown V2
+        - [x] Print the ID of the message
+    - [x] Image
+    - [ ] Audio
+    - [ ] Voice
+    - [ ] File
+    - [x] Reply
+        - [x] Same chat
+        - [x] Other chat
+    - [ ] Get input from named pipe
+- [x] Receive
+    - [x] Text
+    - [x] Audio/Voice
+    - [x] Photo
+    - [x] Files
+    - [x] Receive n messages
+    - [x] Receive messages continuously
+    - [x] Sync messages received while offline
+    - [x] Discard received while offline
+    - [x] Receive from a specific chat
+    - [x] Receive from all chat
+    - [x] Get the message id
+    - [x] Get the message time
+        - [x] Unix
+        - [x] Human Readable
+    - [ ] Redirect to named pipe
+- [x] Delete
+- [x] Edit
+    - [x] Text
 ###### If you like this repo star and share it!
 # Build
 ```go
