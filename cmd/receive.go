@@ -14,7 +14,7 @@ import (
 var receiveTextCmd = &cobra.Command{
 	Use:   "receive",
 	Short: "Receive message with text",
-	Long:  "Receive a message as bot with the pattern below\nDATA|CHAT_ID|MESSAGE_ID|URL|MESSAGE",
+	Long:  "Receive a message as bot with the pattern below\n|DATA|CHAT_ID|MESSAGE_ID|URL|FILE_NAME|FILE_CAPTION|TEXT|",
 	//Link the validation function to the receiveTextCmd
 	Args: validateArgsReceive,
 	//Link the function with the capabilities of returning an error
@@ -72,7 +72,7 @@ func receiveMessage(cmd *cobra.Command, args []string) error {
 			return
 		}
 		//Create an empty message that will be filled by the functions
-		outputMessage := ""
+		outputMessage := "|"
 
 		//Append the Date and Time
 		if wantTimestampHuman {
@@ -91,33 +91,62 @@ func receiveMessage(cmd *cobra.Command, args []string) error {
 			outputMessage += fmt.Sprintf("MESSAGE_ID:%d|", update.Message.ID)
 		}
 
-		if (update.Message.Photo != nil && wantPhoto) || (update.Message.Document != nil && wantFile) || (update.Message.Audio != nil && wantAudio) {
-
+		if wantPhoto || wantFile || wantAudio {
 			var fileID string
+			var fileName string
+
+			fileIsPresent := false
 
 			if wantPhoto {
-				//Get highest resolution photo
-				fileID = update.Message.Photo[len(update.Message.Photo)-1].FileID
-			} else if wantFile {
-				fileID = update.Message.Document.FileID
-			} else if wantAudio {
-				fileID = update.Message.Audio.FileID
-			} else {
-				return
+				if update.Message.Photo != nil && wantPhoto {
+					fileIsPresent = true
+					//Get highest resolution photo
+					fileID = update.Message.Photo[len(update.Message.Photo)-1].FileID
+					fileName = ""
+				}
 			}
 
-			// Get file info from Telegram API
-			file, err := tgBot.GetFile(ctx, &bot.GetFileParams{FileID: fileID})
-			if err != nil {
-				fmt.Println("Error file not valid")
-				return
+			if wantFile {
+				if update.Message.Document != nil && wantFile {
+					fileIsPresent = true
+					fileID = update.Message.Document.FileID
+					fileName = update.Message.Document.FileName
+				}
 			}
 
-			//Append image path
-			outputMessage += fmt.Sprintf("|https://api.telegram.org/file/bot%s/%s|%s", token, file.FilePath, update.Message.Caption)
+			if wantAudio {
+				if update.Message.Audio != nil {
+					fileIsPresent = true
+					fileID = update.Message.Audio.FileID
+					fileName = update.Message.Audio.FileName
+				} else if update.Message.Voice != nil {
+					fileIsPresent = true
+					fileID = update.Message.Voice.FileID
+					fileName = ""
+				}
+			}
+
+			if fileIsPresent {
+				// Get file info from Telegram API
+				file, err := tgBot.GetFile(ctx, &bot.GetFileParams{FileID: fileID})
+				if err != nil {
+					fmt.Println("Error file not valid")
+					return
+				}
+
+				//Append image path
+				outputMessage += fmt.Sprintf("URL:https://api.telegram.org/file/bot%s/%s|", token, file.FilePath)
+
+				if fileName != "" {
+					outputMessage += "FILE_NAME:" + fileName + "|"
+				}
+
+				outputMessage += "FILE_CAPTION:" + update.Message.Caption + "|"
+
+			}
 		} else if update.Message.Text != "" { //Handle text message
 			//Append message
-			outputMessage += update.Message.Text
+			outputMessage += "TEXT:" + update.Message.Text + "|"
 		}
 
 		//Print out complete message
