@@ -8,6 +8,7 @@ A CLI tool for interacting on telegram as a bot written in golang
   - [Send](#send)
   - [Receive](#receive)
   - [Delete](#delete)
+  - [Edit](#edit)
 - [License](#license)
 
 # Overview
