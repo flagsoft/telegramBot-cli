@@ -23,6 +23,9 @@ Built With:
         - [x] With markdown V2
         - [x] Print the ID of the message
     - [x] Image
+        - [x] With spoiler
+    - [x] Video
+        - [x] With spoiler
     - [ ] Audio
     - [ ] Voice
     - [ ] File
