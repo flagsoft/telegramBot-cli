@@ -155,11 +155,10 @@ func receiveMessage(cmd *cobra.Command, args []string) error {
 		//Increase the counter only if user want a cuntdown
 		if maxMessages != 0 {
 			counter++
-
 		}
 
 		//Check if counter has reach the user value
-		if counter > maxMessages {
+		if counter >= maxMessages {
 			//Close the bot
 			tgBot.Close(ctx)
 

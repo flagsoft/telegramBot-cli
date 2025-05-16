@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -28,7 +29,11 @@ func init() {
 	sendCmd.Flags().StringP("token", "t", "", "Token from bot fathers")
 	sendCmd.Flags().IntP("chatId", "c", 0, "Your chat ID")
 	sendCmd.Flags().StringP("messageText", "m", "", "Message text to send")
-	sendCmd.Flags().StringP("imagePath", "i", "", "Path of the image to send")
+	sendCmd.Flags().StringP("filePath", "p", "", "Path of the image/video to send")
+	sendCmd.Flags().IntP("fileTimeout", "T", 60, "Timeout in seconds for sending a file")
+	sendCmd.Flags().BoolP("pathIsImage", "i", false, "The path is an image to send")
+	sendCmd.Flags().BoolP("pathIsVideo", "v", false, "The path is a video to send")
+	sendCmd.Flags().BoolP("fileHasSpoiler", "H", false, "The file is send with hidden preview")
 	sendCmd.Flags().IntP("replyChatId", "x", 0, "Chat id you want to reply")
 	sendCmd.Flags().IntP("replyMessageId", "y", 0, "Message id you want to reply")
 	sendCmd.Flags().BoolP("markDownV2", "2", false, "Message text is parsed in markdown v2")
@@ -39,7 +44,11 @@ func sendMessage(cmd *cobra.Command, args []string) error {
 	token, _ := cmd.Flags().GetString("token")
 	chatId, _ := cmd.Flags().GetInt("chatId")
 	messageText, _ := cmd.Flags().GetString("messageText")
-	imagePath, _ := cmd.Flags().GetString("imagePath")
+	filePath, _ := cmd.Flags().GetString("filePath")
+	fileTimeout, _ := cmd.Flags().GetInt("fileTimeout")
+	pathIsImage, _ := cmd.Flags().GetBool("pathIsImage")
+	pathIsVideo, _ := cmd.Flags().GetBool("pathIsVideo")
+	fileHasSpoiler, _ := cmd.Flags().GetBool("fileHasSpoiler")
 	replyChatId, _ := cmd.Flags().GetInt("replyChatId")
 	replyMessageId, _ := cmd.Flags().GetInt("replyMessageId")
 	markDownV2, _ := cmd.Flags().GetBool("markDownV2")
@@ -75,29 +84,58 @@ func sendMessage(cmd *cobra.Command, args []string) error {
 		replyParameters.MessageID = replyMessageId
 	}
 
-	//Send the image
-	if imagePath != "" {
+	//Send a file
+	if filePath != "" {
 		//Open image
-		image, err := os.Open(imagePath)
+		file, err := os.Open(filePath)
 		if err != nil {
 			return err
 		}
 
-		//Create image parameters
-		parameters := &bot.SendPhotoParams{
-			ChatID:          chatId,
-			Photo:           &models.InputFileUpload{Filename: imagePath, Data: image},
-			Caption:         messageText,
-			ReplyParameters: replyParameters,
-			ParseMode:       parsing,
-		}
+		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(fileTimeout)*time.Second)
+		defer cancel()
 
-		//Send image
-		rtrn, err = tgBot.SendPhoto(bgCtx, parameters)
+		if pathIsImage {
+			//Create image parameters
+			parameters := &bot.SendPhotoParams{
+				ChatID:          chatId,
+				Photo:           &models.InputFileUpload{Filename: filePath, Data: file},
+				Caption:         messageText,
+				ReplyParameters: replyParameters,
+				ParseMode:       parsing,
+				HasSpoiler:      fileHasSpoiler,
+			}
 
-		//Check for errors
-		if err != nil {
-			return err
+			//Send image
+			rtrn, err = tgBot.SendPhoto(ctx, parameters)
+
+			//Check for errors
+			if err != nil {
+				if errors.Is(err, context.DeadlineExceeded) {
+					return fmt.Errorf("send file request exceeded timeout of %d seconds, try a smaller file or increase -T", fileTimeout)
+				}
+				return err
+			}
+		} else if pathIsVideo {
+			parameters := &bot.SendVideoParams{
+				ChatID:          chatId,
+				Video:           &models.InputFileUpload{Filename: filePath, Data: file},
+				Caption:         messageText,
+				ReplyParameters: replyParameters,
+				ParseMode:       parsing,
+				HasSpoiler:      fileHasSpoiler,
+			}
+
+			//Send video
+			rtrn, err = tgBot.SendVideo(ctx, parameters)
+
+			//Check for errors
+			if err != nil {
+				if errors.Is(err, context.DeadlineExceeded) {
+					return fmt.Errorf("send file request exceeded timeout of %d seconds, try a smaller file or increase -T", fileTimeout)
+				}
+				return err
+			}
 		}
 
 	} else { //Send a message
@@ -152,22 +190,33 @@ func validateArgsSend(cmd *cobra.Command, args []string) error {
 	}
 
 	//Validate the path
-	var hasImage bool
+	var hasPath bool
 
-	imagePath, _ := cmd.Flags().GetString("imagePath")
+	imagePath, _ := cmd.Flags().GetString("filePath")
 	if imagePath == "" {
-		hasImage = false
+		hasPath = false
 	} else {
 		//Check if the path is correct
 		if _, err := os.Stat(imagePath); errors.Is(err, os.ErrNotExist) {
 			return fmt.Errorf("wrong path provided")
 		}
 
-		hasImage = true
+		hasPath = true
 	}
 
-	if !(hasMessage || hasImage) {
-		return fmt.Errorf("provide at least one parameter between message or image")
+	if hasPath {
+		pathIsImage, _ := cmd.Flags().GetBool("pathIsImage")
+		pathIsVideo, _ := cmd.Flags().GetBool("pathIsVideo")
+
+		if pathIsImage && pathIsVideo {
+			return fmt.Errorf("images and videos are mutually exclusive")
+		} else if !pathIsImage && !pathIsVideo {
+			return fmt.Errorf("you need to specify if the path is a video or an image")
+		}
+	}
+
+	if !(hasMessage || hasPath) {
+		return fmt.Errorf("provide at least one parameter between message or file")
 	}
 
 	return nil
